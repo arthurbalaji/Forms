@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'forms',
+    'django_cleanup'
 ]
 
 MIDDLEWARE = [
@@ -154,3 +155,7 @@ SESSION_COOKIE_HTTPONLY = True
 # If you're in development, you can set these to False
 CSRF_COOKIE_SECURE = False
 SESSION_COOKIE_SECURE = False
+import os
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

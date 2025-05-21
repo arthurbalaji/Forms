@@ -81,7 +81,8 @@ export const logout = async () => {
   );
 };
 
-
+export const deleteForm = (formId) =>
+  api.delete(`/forms/${formId}/`);
 
 export const getForms = () =>
   api.get('/forms/');
@@ -98,20 +99,37 @@ export const getForm = (formId) =>
 export const getFormResponses = (formId) =>
   api.get(`/forms/${formId}/responses/`);
 
-export const submitResponse = async (formId, responseData) => {
+export const submitResponse = async (formId, responseData, isMultipart = false) => {
   try {
-    const token = await getCSRFToken();
-    const response = await api.post(
-      `/forms/${formId}/responses/`,
-      responseData,
-      {
-        headers: {
-          'X-CSRFToken': token,
-          'Content-Type': 'application/json',
+    if (!isMultipart) {
+      // JSON body (no files)
+      const token = await getCSRFToken();
+      const response = await api.post(
+        `/forms/${formId}/responses/`,
+        responseData,
+        {
+          headers: {
+            'X-CSRFToken': token,
+            'Content-Type': 'application/json',
+          }
         }
-      }
-    );
-    return response.data;
+      );
+      return response.data;
+    } else {
+      // Multipart (with files)
+      const token = await getCSRFToken();
+      const response = await api.post(
+        `/forms/${formId}/responses/`,
+        responseData,
+        {
+          headers: {
+            'X-CSRFToken': token,
+            'Content-Type': 'multipart/form-data',
+          }
+        }
+      );
+      return response.data;
+    }
   } catch (error) {
     console.error('API Error:', error);
     if (error.response) {

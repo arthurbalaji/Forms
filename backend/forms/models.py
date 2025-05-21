@@ -1,6 +1,10 @@
 from django.db import models
 from django.contrib.auth.models import User
 
+def form_file_upload_path(instance, filename):
+    # Store files in 'form_files/<form_id>/<response_id>/<filename>'
+    return f"form_files/form_{instance.form.id}/response_{instance.id}/{filename}"
+
 class Form(models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
@@ -18,6 +22,8 @@ class FormResponse(models.Model):
     respondent = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     response_data = models.JSONField()
     submitted_at = models.DateTimeField(auto_now_add=True)
+    # New: store uploaded files; mapping: question_id -> FileField
+    uploaded_files = models.JSONField(default=dict, blank=True)
 
     class Meta:
         ordering = ['-submitted_at']
