@@ -16,9 +16,11 @@ class FormSerializer(serializers.ModelSerializer):
         read_only_fields = ('owner',)
 
 class FormResponseSerializer(serializers.ModelSerializer):
+    respondent_username = serializers.CharField(source='respondent.username', read_only=True)
+    
     class Meta:
         model = FormResponse
-        fields = ['id', 'form', 'respondent', 'response_data', 'submitted_at']
+        fields = ['id', 'form', 'respondent', 'respondent_username', 'response_data', 'submitted_at']
         read_only_fields = ['respondent', 'submitted_at']
 
     def validate_form(self, value):

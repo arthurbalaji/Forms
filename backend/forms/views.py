@@ -35,18 +35,6 @@ class FormViewSet(viewsets.ModelViewSet):
         serializer.save(owner=self.request.user)
 
     @action(detail=True, methods=['get'])
-    def responses(self, request, pk=None):
-        form = self.get_object()
-        if form.owner != request.user:
-            return Response(
-                {"error": "Not authorized to view responses"}, 
-                status=status.HTTP_403_FORBIDDEN
-            )
-        responses = form.responses.all()
-        serializer = FormResponseSerializer(responses, many=True)
-        return Response(serializer.data)
-
-    @action(detail=True, methods=['get'])
     def export_csv(self, request, pk=None):
         form = self.get_object()
         if form.owner != request.user:

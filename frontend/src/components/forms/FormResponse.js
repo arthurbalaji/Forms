@@ -14,6 +14,10 @@ import {
   FormGroup,
   CircularProgress,
   Alert,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from '@mui/material';
 import { getForm, submitResponse } from '../../utils/api';
 
@@ -73,14 +77,34 @@ const FormResponse = () => {
     });
   };
 
+  const validateResponses = () => {
+    const errors = [];
+    form.questions.forEach((question) => {
+      if (question.required) {
+        const response = responses[question.id];
+        if (!response || 
+            (Array.isArray(response) && response.length === 0) ||
+            (typeof response === 'string' && response.trim() === '')) {
+          errors.push(`"${question.label}" is required`);
+        }
+      }
+    });
+    return errors;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setSubmitting(true);
     setError('');
+    
+    const validationErrors = validateResponses();
+    if (validationErrors.length > 0) {
+      setError(validationErrors.join('\n'));
+      return;
+    }
 
+    setSubmitting(true);
     try {
       await submitResponse(id, { response_data: responses });
-      // Show success message
       alert('Response submitted successfully!');
       navigate('/forms');
     } catch (err) {
@@ -102,7 +126,7 @@ const FormResponse = () => {
     );
   }
 
-  if (error) {
+  if (error && !form) {
     return (
       <Container maxWidth="md" sx={{ mt: 4 }}>
         <Alert severity="error">{error}</Alert>
@@ -124,9 +148,11 @@ const FormResponse = () => {
         <Typography variant="h4" gutterBottom>
           {form.title}
         </Typography>
-        <Typography variant="body1" paragraph>
-          {form.description}
-        </Typography>
+        {form.description && (
+          <Typography variant="body1" paragraph>
+            {form.description}
+          </Typography>
+        )}
 
         <Box component="form" onSubmit={handleSubmit}>
           {form.questions.map((question) => (
@@ -143,6 +169,16 @@ const FormResponse = () => {
                   </Typography>
                 )}
               </Typography>
+              
+              {question.description && (
+                <Typography 
+                  variant="body2" 
+                  color="text.secondary" 
+                  sx={{ mb: 2 }}
+                >
+                  {question.description}
+                </Typography>
+              )}
 
               {question.type === 'short_text' && (
                 <TextField
@@ -213,9 +249,44 @@ const FormResponse = () => {
                 </FormGroup>
               )}
 
+              {question.type === 'dropdown' && (
+                <FormControl fullWidth>
+                  <InputLabel>Select an option</InputLabel>
+                  <Select
+                    value={responses[question.id] || ''}
+                    onChange={(e) => handleInputChange(question.id, e.target.value)}
+                    required={question.required}
+                    disabled={submitting}
+                    label="Select an option"
+                  >
+                    {question.options.map((option) => (
+                      <MenuItem key={option.id} value={option.id.toString()}>
+                        {option.text}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              )}
+
               {question.type === 'date' && (
                 <TextField
                   type="date"
+                  fullWidth
+                  value={responses[question.id] || ''}
+                  onChange={(e) =>
+                    handleInputChange(question.id, e.target.value)
+                  }
+                  required={question.required}
+                  disabled={submitting}
+                  InputLabelProps={{
+                    shrink: true,
+                  }}
+                />
+              )}
+
+              {question.type === 'time' && (
+                <TextField
+                  type="time"
                   fullWidth
                   value={responses[question.id] || ''}
                   onChange={(e) =>
@@ -248,7 +319,9 @@ const FormResponse = () => {
 
           {error && (
             <Alert severity="error" sx={{ mt: 2, mb: 2 }}>
-              {error}
+              {error.split('\n').map((err, index) => (
+                <div key={index}>{err}</div>
+              ))}
             </Alert>
           )}
 
